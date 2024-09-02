@@ -147,6 +147,15 @@
             color: #d32f2f;
             display: none;
         }
+        .logout-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -157,6 +166,9 @@
             <input type="password" id="password" placeholder="Parolă" required>
             <label>
                 <input type="checkbox" id="show-password" onclick="togglePassword()"> Arată parola
+            </label>
+            <label>
+                <input type="checkbox" id="remember-me"> Păstrează-mă autentificat
             </label>
             <button type="submit">Autentificare</button>
             <p id="login-error" class="login-error">Nume utilizator sau parolă incorectă.</p>
@@ -230,48 +242,57 @@
             <p class="sold-final">Sold Final: <span id="sold-final">0</span> lei</p>
         </div>
 
-        <div class="form-section">
-            <button onclick="saveChanges()">Salvează Modificările</button>
-        </div>
+        <button class="logout-button" onclick="logout()">Deconectare</button>
     </div>
 
     <script>
-        // Date de autentificare
-        const adminUsers = [
-            { username: 'Stefan Enoiu', password: 'Pitulush15' },
-            { username: 'Stefan Alexandra', password: 'Budulush21' }
-        ];
-
-        // Verifică autentificarea utilizatorului
-        function authenticate(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            const user = adminUsers.find(user => user.username === username && user.password === password);
-            
-            if (user) {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verifică dacă utilizatorul este autentificat
+            if (localStorage.getItem('authenticated') === 'true') {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('buget-section').style.display = 'block';
-                // Populează tabelul inițial
+                updateMonth();
+            }
+        });
+
+        function authenticate(event) {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+
+            if (
+                (username === 'Stefan Enoiu' && password === 'Pitulush15') ||
+                (username === 'Stefan Alexandra' && password === 'Budulush21')
+            ) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('buget-section').style.display = 'block';
+                // Salvează starea autentificării
+                if (rememberMe) {
+                    localStorage.setItem('authenticated', 'true');
+                }
                 updateMonth();
             } else {
                 document.getElementById('login-error').style.display = 'block';
             }
         }
 
-        // Toggle password visibility
         function togglePassword() {
             const passwordField = document.getElementById('password');
             passwordField.type = passwordField.type === 'password' ? 'text' : 'password';
         }
 
-        // Variabile globale pentru buget
+        function logout() {
+            localStorage.removeItem('authenticated');
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('buget-section').style.display = 'none';
+        }
+
         let bugetInitial = 0;
         let totalIncasari = 0;
         let totalCheltuieli = 0;
 
-        // Cheltuieli predefinite
         const cheltuieliPredefinite = [
             { descriere: 'Nunta Vlad', suma: 2500, data: '2024-08-31' },
             { descriere: 'Botez Petra', suma: 1500, data: '2024-09-03' },
@@ -309,7 +330,7 @@
 
         function populateTable(items, type) {
             const tableBody = document.getElementById(type + '-body');
-            tableBody.innerHTML = ''; // Clear previous content
+            tableBody.innerHTML = '';
 
             items.forEach(item => {
                 tableBody.innerHTML += `
@@ -354,10 +375,10 @@
                 }
             } else if (type === 'cheltuieli') {
                 if (isChecked) {
-                    totalCheltuieli -= value; // Deduct cheltuieli
+                    totalCheltuieli -= value;
                     row.classList.add('cheltuieli-row');
                 } else {
-                    totalCheltuieli += -value; // Add back cheltuieli
+                    totalCheltuieli += -value;
                     row.classList.remove('cheltuieli-row');
                 }
             }
@@ -387,7 +408,7 @@
             if (descriere && suma && data) {
                 const newIncasare = { descriere, suma, data };
                 populateTable([newIncasare], 'incasari');
-                updateSold(); // Ensure the sold is updated when new incasare is added
+                updateSold();
             }
         }
 
@@ -400,12 +421,11 @@
             if (descriere && suma && data) {
                 const newCheltuiala = { descriere, suma, data };
                 populateTable([newCheltuiala], 'cheltuieli');
-                updateSold(); // Ensure the sold is updated when new cheltuiala is added
+                updateSold();
             }
         }
 
         function saveChanges() {
-            // Simulate saving to a server or local storage
             alert('Modificările au fost salvate!');
         }
     </script>
